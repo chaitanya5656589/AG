@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HealthTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0ca5b0',
+                        secondary: '#4fd1c5',
+                        dark: '#1a202c',
+                        surface: '#ffffff',
+                        background: '#f7fafc',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen w-screen flex items-center justify-center overflow-hidden">
+
+    <!-- Mobile Frame -->
+    <div id="app-frame" class="relative w-full h-full md:w-[375px] md:h-[812px] bg-background md:rounded-[3rem] md:shadow-2xl overflow-hidden flex flex-col border-4 border-gray-900 md:border-8">
+        
+        <!-- Status Bar Configuration -->
+        <div class="h-6 w-full bg-primary flex items-center justify-between px-6 text-white text-xs font-medium z-50">
+            <span>9:41</span>
+            <div class="flex space-x-2">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 overflow-y-auto relative no-scrollbar">
+            <!-- Dynamic Content Injected Here -->
+        </main>
+
+        <!-- Dynamic Footer Navigation (Hidden on Login) -->
+        <nav id="bottom-nav" class="hidden h-20 bg-white shadow-[0_-5px_15px_rgba(0,0,0,0.05)] flex items-center justify-around px-6 pb-2 z-40">
+            <button onclick="router.navigate('dashboard')" class="nav-item text-primary flex flex-col items-center space-y-1">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </button>
+            <button onclick="router.navigate('reports')" class="nav-item text-gray-400 flex flex-col items-center space-y-1">
+                <i class="fas fa-file-medical text-xl"></i>
+                <span class="text-[10px] font-medium">Reports</span>
+            </button>
+            <div class="w-12"></div> <!-- Spacer for FAB -->
+            <button onclick="router.navigate('diseases')" class="nav-item text-gray-400 flex flex-col items-center space-y-1">
+                <i class="fas fa-virus text-xl"></i>
+                <span class="text-[10px] font-medium">Diseases</span>
+            </button>
+            <button onclick="router.navigate('bills')" class="nav-item text-gray-400 flex flex-col items-center space-y-1">
+                <i class="fas fa-file-invoice-dollar text-xl"></i>
+                <span class="text-[10px] font-medium">Bills</span>
+            </button>
+
+            <!-- FAB (Floating Action Button) -->
+            <button onclick="router.openScanner()" class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-primary rounded-full shadow-lg flex items-center justify-center text-white text-2xl border-4 border-gray-50 hover:scale-105 transition-transform">
+                <i class="fas fa-camera"></i>
+            </button>
+        </nav>
+
+        <!-- Scanner Overlay -->
+        <div id="scanner-overlay" class="hidden absolute inset-0 bg-black z-50 flex flex-col duration-300">
+            <!-- Camera Viewfinder -->
+            <div class="flex-1 relative bg-gray-900 flex flex-col">
+                <!-- Camera Header -->
+                <div class="h-16 flex items-center justify-between px-4 text-white z-10 bg-black/50">
+                    <button onclick="router.closeScanner()"><i class="fas fa-times text-xl"></i></button>
+                    <span class="font-medium">Scan Document</span>
+                    <button><i class="fas fa-bolt"></i></button>
+                </div>
+
+                <!-- Viewfinder Area -->
+                <div class="flex-1 relative flex items-center justify-center p-8">
+                    <div id="camera-preview" class="w-full h-full border-2 border-primary/50 rounded-lg relative overflow-hidden bg-gray-800 flex items-center justify-center">
+                         <!-- Simulated Camera Feed Image or Video -->
+                         <img id="scanned-image-preview" src="" class="hidden w-full h-full object-cover">
+                         <div id="camera-placeholder" class="text-gray-500 text-center">
+                            <i class="fas fa-camera text-4xl mb-4"></i>
+                            <p>Camera Active</p>
+                         </div>
+                    </div>
+                    <!-- Crop Corners -->
+                    <div class="absolute top-10 left-10 w-8 h-8 border-t-4 border-l-4 border-primary"></div>
+                    <div class="absolute top-10 right-10 w-8 h-8 border-t-4 border-r-4 border-primary"></div>
+                    <div class="absolute bottom-10 left-10 w-8 h-8 border-b-4 border-l-4 border-primary"></div>
+                    <div class="absolute bottom-10 right-10 w-8 h-8 border-b-4 border-r-4 border-primary"></div>
+                </div>
+
+                <!-- Camera Controls -->
+                <div class="h-32 bg-black flex items-center justify-center relative">
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="router.handleFileSelect(event)">
+                    <button onclick="document.getElementById('camera-input').click()" class="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center bg-white/20 active:bg-white/50 transition-all">
+                        <div class="w-12 h-12 bg-white rounded-full"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
