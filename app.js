@@ -58,8 +58,48 @@ const router = {
         }
     },
 
-    openScanner() {
+    async openScanner() {
+        // Check if running in a native environment with Capacitor and the ML Kit plugin
+        if (window.Capacitor && window.Capacitor.Plugins.DocumentScanner) {
+            try {
+                const { DocumentScanner } = window.Capacitor.Plugins;
+                const result = await DocumentScanner.scan({
+                    maxNumPages: 1,
+                    scannerMode: 'FULL', // FULL mode includes ML-enabled image cleaning
+                    responseType: 'base64'
+                });
+
+                if (result.images && result.images.length > 0) {
+                    const imgBase64 = `data:image/jpeg;base64,${result.images[0]}`;
+                    this.saveScannedReport(imgBase64);
+                }
+            } catch (error) {
+                console.error('Scan failed:', error);
+                alert('Document scan failed. Falling back to standard camera.');
+                this.openLegacyScanner();
+            }
+        } else {
+            // Fallback for browser/mock testing
+            this.openLegacyScanner();
+        }
+    },
+
+    openLegacyScanner() {
         this.scanner.classList.remove('hidden');
+    },
+
+    saveScannedReport(base64Data) {
+        // In a real app, you'd upload this to a server. 
+        // Here we just add it to the state to demonstrate.
+        this.addReport({
+            title: 'Smart Scanned Report',
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            hospital: 'ML Kit Processed',
+            type: 'Scan',
+            preview: base64Data
+        });
+        alert("Document captured and cleaned by ML Kit! Added to reports.");
+        this.navigate('reports');
     },
 
     closeScanner() {
@@ -260,11 +300,14 @@ const views = {
             <div class="flex-1 overflow-y-auto p-6 space-y-4">
                 ${state.reports.map(report => `
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-                        <div class="w-12 h-12 rounded-xl ${report.type === 'Lab' ? 'bg-blue-100 text-blue-600' : report.type === 'Radiology' ? 'bg-orange-100 text-orange-600' : 'bg-teal-100 text-teal-600'} flex items-center justify-center text-xl">
-                            <i class="fas ${report.type === 'Scan' ? 'fa-camera' : 'fa-file-medical'}"></i>
+                        <div class="w-12 h-12 rounded-xl ${report.type === 'Lab' ? 'bg-blue-100 text-blue-600' : report.type === 'Radiology' ? 'bg-orange-100 text-orange-600' : 'bg-teal-100 text-teal-600'} flex items-center justify-center text-xl overflow-hidden">
+                            ${report.preview ? `<img src="${report.preview}" class="w-full h-full object-cover">` : `<i class="fas ${report.type === 'Scan' ? 'fa-camera' : 'fa-file-medical'}"></i>`}
                         </div>
                         <div class="flex-1">
-                            <h4 class="font-bold text-gray-800">${report.title}</h4>
+                            <h4 class="font-bold text-gray-800 flex items-center gap-2">
+                                ${report.title}
+                                ${report.hospital === 'ML Kit Processed' ? '<span class="text-[8px] bg-primary text-white px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Smart</span>' : ''}
+                            </h4>
                             <p class="text-xs text-gray-500">${report.date}</p>
                             <span class="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded-full font-medium">${report.hospital}</span>
                         </div>
